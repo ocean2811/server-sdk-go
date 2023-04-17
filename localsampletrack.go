@@ -50,6 +50,8 @@ type LocalSampleTrack struct {
 	simulcastID     string
 	videoLayer      *livekit.VideoLayer
 	onRTCP          func(rtcp.Packet)
+	presetStreamID  string
+	presetTrackID   string
 
 	cancelWrite func()
 	provider    SampleProvider
@@ -76,6 +78,18 @@ func WithRTCPHandler(cb func(rtcp.Packet)) LocalSampleTrackOptions {
 	}
 }
 
+func WithStreamID(streamID string) LocalSampleTrackOptions {
+	return func(s *LocalSampleTrack) {
+		s.presetStreamID = streamID
+	}
+}
+
+func WithTrackID(trackID string) LocalSampleTrackOptions {
+	return func(s *LocalSampleTrack) {
+		s.presetTrackID = trackID
+	}
+}
+
 func NewLocalSampleTrack(c webrtc.RTPCodecCapability, opts ...LocalSampleTrackOptions) (*LocalSampleTrack, error) {
 	s := &LocalSampleTrack{}
 	for _, o := range opts {
@@ -92,12 +106,21 @@ func NewLocalSampleTrack(c webrtc.RTPCodecCapability, opts ...LocalSampleTrackOp
 			rid = "q"
 		}
 	}
-	trackID := utils.NewGuid("TR_")
-	streamID := utils.NewGuid("ST_")
+
+	trackID := s.presetTrackID
+	if len(trackID) == 0 {
+		trackID = utils.NewGuid("TR_")
+	}
+	streamID := s.presetStreamID
+	if len(streamID) == 0 {
+		streamID = utils.NewGuid("ST_")
+	}
+
 	if s.simulcastID != "" {
 		trackID = s.simulcastID
 		streamID = s.simulcastID
 	}
+
 	rtpTrack, err := webrtc.NewTrackLocalStaticRTP(c, trackID, streamID, webrtc.WithRTPStreamID(rid))
 	if err != nil {
 		return nil, err

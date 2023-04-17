@@ -71,6 +71,18 @@ func ReaderTrackWithRTCPHandler(f func(rtcp.Packet)) func(provider *ReaderSample
 	}
 }
 
+func ReaderTrackWithStreamID(streamID string) func(provider *ReaderSampleProvider) {
+	return func(provider *ReaderSampleProvider) {
+		provider.trackOpts = append(provider.trackOpts, WithStreamID(streamID))
+	}
+}
+
+func ReaderTrackWithTrackID(trackID string) func(provider *ReaderSampleProvider) {
+	return func(provider *ReaderSampleProvider) {
+		provider.trackOpts = append(provider.trackOpts, WithTrackID(trackID))
+	}
+}
+
 // NewLocalFileTrack creates an *os.File reader for NewLocalReaderTrack
 func NewLocalFileTrack(file string, options ...ReaderSampleProviderOption) (*LocalSampleTrack, error) {
 	// File health check
